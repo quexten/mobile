@@ -3,6 +3,8 @@ using Bit.Core.Enums;
 using Foundation;
 using System;
 using System.Runtime.InteropServices;
+using Org.BouncyCastle.Crypto.Generators;
+using Isopoh.Cryptography.Argon2;
 
 namespace Bit.iOS.Core.Services
 {
@@ -43,5 +45,20 @@ namespace Bit.iOS.Core.Services
         [DllImport(ObjCRuntime.Constants.libSystemLibrary, EntryPoint = "CCKeyDerivationPBKDF")]
         private extern static int CCKeyCerivationPBKDF(uint algorithm, IntPtr password, nuint passwordLen,
             IntPtr salt, nuint saltLen, uint prf, nuint rounds, IntPtr derivedKey, nuint derivedKeyLength);
+            
+        public byte[] Argon2id(byte[] password, byte[] salt, int iterations, int memory, int parallelism)
+        {
+            var config = new Argon2Config();
+            config.Password = password;
+            config.Salt = salt;
+            config.TimeCost = iterations;
+            config.MemoryCost = memory;
+            config.Lanes = parallelism;
+            config.HashLength = 32;
+            config.Threads = parallelism;
+            config.Type = Argon2Type.DataIndependentAddressing;
+            var argon2 = new Argon2(config);
+            return argon2.Hash().Buffer;
+        }
     }
 }
